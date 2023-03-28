@@ -1,16 +1,12 @@
 module Main(main) where
 import Graphics.Gloss
-import Codec.Picture
-import Graphics.Gloss.Data.Bitmap 
-import Codec.Picture.Types
 import Graphics.Gloss.Data.ViewPort
-import Debug.Trace (trace)
 import Graphics.Gloss.Interface.Environment
 import Debug.Trace
 
 
 width, height, offset :: Int 
-width = 800
+width = 1300
 height = 800
 background = black 
 fps = 600
@@ -21,7 +17,7 @@ data LogoState = Logo {
   logoWidth :: Float, logoHeight :: Float} 
 
 initialLogoState :: LogoState
-initialLogoState = Logo {logoPos = (0, 0), logoVel = (100,100), logoWidth = 90.0, logoHeight = 60.0}
+initialLogoState = Logo {logoPos = (0, 0), logoVel = (90,90), logoWidth = 90.0, logoHeight = 60.0}
 
 update :: ViewPort -> Float -> LogoState -> LogoState
 update _ seconds = changeDir . moveLogo seconds  
@@ -34,6 +30,7 @@ moveLogo seconds state = state { logoPos = (x', y')}
 
     x' = x + vx * seconds
     y' = y + vy * seconds
+{-  
 changeDir :: LogoState -> LogoState
 changeDir logo = 
   let (x, y) = logoPos logo
@@ -53,8 +50,8 @@ changeDir logo =
               else 
                 vy
   in logo {logoVel = (vx', vy')}
-{-
 
+-}  
 changeDir :: LogoState -> LogoState
 changeDir logo = logo {logoVel = (vx', vy')}
   where  
@@ -71,7 +68,7 @@ changeDir logo = logo {logoVel = (vx', vy')}
         --update the velocity 
         -vy
         else 
-          vy -}
+          vy 
 renderLogo :: LogoState -> Picture 
 renderLogo logo = translate x y $ color red $ rectangleSolid (logoWidth logo)  (logoHeight logo)
   where
