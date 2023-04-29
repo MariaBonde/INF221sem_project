@@ -20,6 +20,16 @@
   (major1) == 3 && (major2) <  3 || \
   (major1) == 3 && (major2) == 3 && (minor) <= 8)
 #endif /* MIN_VERSION_JuicyPixels */
+/* package MonadRandom-0.6 */
+#ifndef VERSION_MonadRandom
+#define VERSION_MonadRandom "0.6"
+#endif /* VERSION_MonadRandom */
+#ifndef MIN_VERSION_MonadRandom
+#define MIN_VERSION_MonadRandom(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  6 || \
+  (major1) == 0 && (major2) == 6 && (minor) <= 0)
+#endif /* MIN_VERSION_MonadRandom */
 /* package base-4.17.0.0 */
 #ifndef VERSION_base
 #define VERSION_base "4.17.0.0"
@@ -60,6 +70,36 @@
   (major1) == 0 && (major2) <  2 || \
   (major1) == 0 && (major2) == 2 && (minor) <= 3)
 #endif /* MIN_VERSION_gloss_juicy */
+/* package mtl-2.2.2 */
+#ifndef VERSION_mtl
+#define VERSION_mtl "2.2.2"
+#endif /* VERSION_mtl */
+#ifndef MIN_VERSION_mtl
+#define MIN_VERSION_mtl(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  2 || \
+  (major1) == 2 && (major2) == 2 && (minor) <= 2)
+#endif /* MIN_VERSION_mtl */
+/* package tf-random-0.5 */
+#ifndef VERSION_tf_random
+#define VERSION_tf_random "0.5"
+#endif /* VERSION_tf_random */
+#ifndef MIN_VERSION_tf_random
+#define MIN_VERSION_tf_random(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  5 || \
+  (major1) == 0 && (major2) == 5 && (minor) <= 0)
+#endif /* MIN_VERSION_tf_random */
+/* package transformers-0.5.6.2 */
+#ifndef VERSION_transformers
+#define VERSION_transformers "0.5.6.2"
+#endif /* VERSION_transformers */
+#ifndef MIN_VERSION_transformers
+#define MIN_VERSION_transformers(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  5 || \
+  (major1) == 0 && (major2) == 5 && (minor) <= 6)
+#endif /* MIN_VERSION_transformers */
 
 /* tool gcc-14.0.0 */
 #ifndef TOOL_VERSION_gcc

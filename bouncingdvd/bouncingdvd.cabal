@@ -73,8 +73,10 @@ executable bouncingdvd
                     , gloss-juicy
                     , JuicyPixels
                     , bytestring
-                    
-                    
+                    , mtl
+                    , MonadRandom
+                    , tf-random
+                    , transformers
                  
             
 
