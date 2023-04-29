@@ -6,10 +6,16 @@ import Graphics.Gloss.Interface.Pure.Game
 import Debug.Trace
 import Graphics.Gloss.Juicy
 import System.IO.Unsafe
-import Control.Monad.State 
+--import Control.Monad.State 
 import Control.Monad.Random
+import System.Random.TF
+import Control.Monad.Trans.State 
 
+--element av tilfeldighet, monad random, monad transformer med state og random kanskje? mulig stacke oppå
+-- dvd logoen som ikke beveger seg riktig, random på veiene. 
 
+--type AppStateT m = StateT AppState (RandT StdGen m)
+type AppStateT m = RandT StdGen (StateT AppState m)
 data Screensaver = DVDlogo | BouncingBalls | Fibonacci
 
 data AppState = AppState {
@@ -67,7 +73,7 @@ moveLogo seconds logo = logo { logoPos = (x', y')}
     x' = x + vx * seconds
     y' = y + vy * seconds
 
-changeDir :: (Int, Int) -> LogoState -> LogoState
+changeDir :: (Int, Int)-> LogoState -> LogoState
 changeDir s logo = newState {logoVel = (vx', vy')}
   where  
     (width, height) = s
@@ -118,26 +124,19 @@ data FibVisState = FibVis
   , timeAcc :: Float
   }
 
-updateFibVis :: (Int, Int) -> Float -> FibVisState -> FibVisState
-updateFibVis s seconds fibstate =
-  let
-    updateTimeThreshold = 2 -- desired time threshold in seconds
-    newTimeAcc = timeAcc fibstate + seconds
-    --(width, height) = s
-  in
-    if newTimeAcc >= updateTimeThreshold
-      then
-        let
-          n = count fibstate
-          x = fromIntegral (memoized_fib n)
-          circleX =  -x * cos (pi / 3)--if withinBounds (x * cos (pi / 3)) width 100 then x * cos (pi / 3) else -x * cos (pi / 3)
-          circleY =  -x * sin (pi / 3)--if withinBounds (x * sin (pi / 3)) height 100 then x * sin (pi / 3) else -x * sin (pi / 3)
-          rectX = -x * cos (pi / 3)--if withinBounds (-x * cos (pi / 3)) width 100 then x * cos (pi / 3) else -x * cos (pi / 3)
-          rectY = -x * sin (pi / 3)-- if withinBounds (-x * sin (pi / 3)) height 100 then x * sin (pi / 3) else -x * sin (pi / 3)
-        in
-          fibstate {cPos = (circleX, circleY), rPos = (rectX, rectY), count = n + 1, timeAcc = 0}
-      else
-        fibstate {timeAcc = newTimeAcc}
+updateFibVis :: (Int, Int) -> Float -> Float -> FibVisState -> FibVisState
+updateFibVis s seconds randomNum fibstate = fibstate {cPos = (cx', cy'), rPos = (rx', ry')}
+  where 
+    (cx, cy) = cPos fibstate
+    (rx, ry) = rPos fibstate
+    (width, height) = s
+    cx' = if withinBounds (cx + seconds * randomNum) width 50 then randomNum else cx - seconds * randomNum
+    cy' = if withinBounds (cy + seconds * randomNum) height 50 then randomNum else cy - seconds * randomNum
+    rx' = if withinBounds (rx + seconds * randomNum) width 100 then randomNum else rx - seconds * randomNum
+    ry' = if withinBounds (ry + seconds * randomNum) height 100 then randomNum else ry - seconds * randomNum
+    
+updateFib :: (Int, Int) -> Float -> Float -> FibVisState -> FibVisState
+updateFib s seconds randomNum fibstate = fibstate
 
 
 withinBounds :: Float -> Int -> Float -> Bool
@@ -146,10 +145,30 @@ withinBounds pos screenDim objectDim =
   pos <= -fromIntegral screenDim/2 ||
   pos - objectDim/2 <= -fromIntegral screenDim/2
 
+hexagon :: Float -> Picture
+hexagon sideLength = polygon vertices
+  where
+    angleStep = 2 * pi / 6
+    angles = [i * angleStep | i <- [0..5]]
+    vertices = [(sideLength * cos angle, sideLength * sin angle) | angle <- angles]
+
+hexagonGrid :: FibVisState -> Picture
+hexagonGrid fib = pictures
+    [ translate (xOffset + x * 1.5 * sideLength) (yOffset + y * verticalSpacing) $
+      color (if even $ round (x + y) then blue else red) $
+      hexagon sideLength
+    | x <- [0..cols - 1], y <- [0..rows - 1] ]
+  where
+    rows = 100
+    cols = 100
+    sideLength = 50
+    yOffset = -rows * sideLength * 0.5
+    xOffset = -cols * sideLength * 0.75
+    verticalSpacing = sqrt 3 * sideLength
 
 renderFibVis :: FibVisState -> Picture
-renderFibVis fibstate = Pictures
-  [translate cx cy $ color red $ circleSolid 50, 
+renderFibVis fibstate = Pictures 
+  [translate cx cy $ color red $ hexagon 50,
   translate px py $ color blue $ rectangleSolid 100 100]
     where 
      (cx, cy) = cPos fibstate
@@ -177,16 +196,16 @@ renderBalls balls = translate x y $ color cyan $ circleSolid (ballRadius balls)
   where 
     (x, y) = ballPos balls
 
-updateBalls :: (Int, Int) -> Float -> BallState -> BallState
-updateBalls (screenW, screenH) seconds balls = balls {ballPos = (x', y'), ballVel = (vx', vy')}
+updateBalls :: (Int, Int) -> Float -> Float -> BallState -> BallState
+updateBalls (screenW, screenH) seconds randomnum balls = balls {ballPos = (x', y'), ballVel = (vx', vy')}
   where 
     (x, y) = ballPos balls
     (vx, vy) = ballVel balls
     (x', vx') = clip x vx (((fromIntegral screenW)/2)-(ballRadius balls))
     (y', vy') = clip y vy (((fromIntegral screenH)/2)-(ballRadius balls))
     clip h dh max
-          | h' > max = (max, -dh)
-          | h' < -max= (-max, -dh)
+          | h' > max = (max, -dh*randomnum)
+          | h' < -max= (-max, -dh*randomnum)
           | otherwise = (h', dh)
           where h' = h + seconds*dh -- adjust gravity based on distance from center of screen
 --beveger seg saktere jo nærmere høyre siden, altså jo større x er.
@@ -199,35 +218,57 @@ initialBallState = Ball {ballPos = (500, -300), ballVel = (100, 220), ballRadius
 
 ---------- functions for all screensavers ------------
 
-eventFunc :: Event -> State AppState ()
-eventFunc (EventResize (w, h))  = modify (\s -> s {screenSize = (w, h)})
-eventFunc (EventKey (Char '1') Down _ _) = modify (\s -> s {screensaver = Just DVDlogo})
-eventFunc (EventKey (Char '2') Down _ _) = modify (\s -> s {screensaver = Just BouncingBalls})
-eventFunc (EventKey (Char '3') Down _ _) = modify (\s -> s {screensaver = Just Fibonacci})
+eventFunc :: (Monad m) => Event -> AppStateT m ()
+eventFunc (EventResize (w, h)) = do
+    s <- lift get
+    lift . put $ s {screenSize = (w, h)}
+eventFunc (EventKey (Char '1') Down _ _) = lift $ modify (\s -> s {screensaver = Just DVDlogo})
+eventFunc (EventKey (Char '2') Down _ _) = lift $ modify (\s -> s {screensaver = Just BouncingBalls})
+eventFunc (EventKey (Char '3') Down _ _) = lift $ modify (\s -> s {screensaver = Just Fibonacci})
 eventFunc _ = return ()
 
---element av tilfeldighet, monad random, monad transformer med state og random kanskje? mulig stacke oppå
--- dvd logoen som ikke beveger seg riktig, random på veiene. 
-updateScreensaver :: Float -> State AppState ()
+
+updateScreensaver :: (Monad m) => Float -> AppStateT m ()
 updateScreensaver seconds = do 
-  appState <- get 
+  randomNumber <- getRandomR (0.7, 1.2) :: (MonadRandom m) => m Float
+  (w, h) <- screenSize <$> lift get
+  randomPos <- getRandomR (-fromIntegral w/2, fromIntegral w/2) :: (MonadRandom m) => m Float
+  appState <- lift get 
   case screensaver appState of 
-    Just DVDlogo -> put $ appState {dvdLogoState = updateDVD (screenSize appState) seconds (dvdLogoState appState)}
-    Just BouncingBalls -> put $ appState {bouncingBallState = updateBalls (screenSize appState) seconds (bouncingBallState appState)}
-    Just Fibonacci -> put $ appState {fibVisState = updateFibVis (screenSize appState) seconds (fibVisState appState)}
-    Nothing -> put $ appState {screensaver = Nothing}
+    Just DVDlogo -> lift . put $ appState {dvdLogoState = updateDVD (screenSize appState) seconds (dvdLogoState appState)}
+    Just BouncingBalls -> do
+      lift . put $ appState {bouncingBallState = updateBalls (screenSize appState) seconds randomNumber (bouncingBallState appState)}
+    Just Fibonacci -> lift . put $ appState {fibVisState = updateFib (screenSize appState) seconds randomPos (fibVisState appState)}
+    Nothing -> lift . put $ appState {screensaver = Nothing}
 
 renderNothing :: Maybe Screensaver -> Picture 
 renderNothing _ = color white(Text "No Screensaver Selected, press 1, 2 or 3")
 
-renderScreensaver :: State AppState Picture 
+renderScreensaver :: (Monad m) => AppStateT m Picture 
 renderScreensaver = do
-  appState <- get 
+  appState <- lift get 
   case screensaver appState of 
     Just DVDlogo -> return $ renderDVD (dvdLogoState appState)
     Just BouncingBalls -> return $ renderBalls (bouncingBallState appState)
-    Just Fibonacci -> return $ renderFibVis (fibVisState appState)
+    Just Fibonacci -> return $ hexagonGrid (fibVisState appState)
     Nothing -> return $ renderNothing (Nothing :: Maybe Screensaver)
+
+runAppStateT :: AppStateT IO a -> AppState -> StdGen -> IO (a, AppState)
+runAppStateT action state gen = runStateT (evalRandT action gen) state
+
+main :: IO ()
+main = do
+    (width, height) <- getScreenSize
+    let window = InWindow "Screensaver" (width, height) (offset, offset)
+    let initialState = AppState (Just DVDlogo) initialLogoState initialFibState initialBallState (width, height)
+    gen <- newStdGen
+
+    play window background fps initialState
+      (\state -> evalState (evalRandT renderScreensaver gen) state)
+      (\event state -> execState (runRandT (eventFunc event) gen) state)
+      (\seconds state -> execState (runRandT (updateScreensaver seconds) gen) state)
+
+{- 
 
 main :: IO ()
 main = do 
@@ -235,7 +276,7 @@ main = do
     let window = InWindow "Screensaver" (width, height) (offset, offset)
     let initialState = AppState (Just DVDlogo) initialLogoState initialFibState initialBallState (width, height)
     play window background fps initialState (evalState renderScreensaver) (execState . eventFunc) (execState . updateScreensaver)
-{-  
+
 changeDir :: LogoState -> LogoState
 changeDir logo = 
   let (x, y) = logoPos logo

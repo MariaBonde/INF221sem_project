@@ -80,6 +80,16 @@
   (major1) == 2 && (major2) <  2 || \
   (major1) == 2 && (major2) == 2 && (minor) <= 2)
 #endif /* MIN_VERSION_mtl */
+/* package strict-0.5 */
+#ifndef VERSION_strict
+#define VERSION_strict "0.5"
+#endif /* VERSION_strict */
+#ifndef MIN_VERSION_strict
+#define MIN_VERSION_strict(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  5 || \
+  (major1) == 0 && (major2) == 5 && (minor) <= 0)
+#endif /* MIN_VERSION_strict */
 /* package tf-random-0.5 */
 #ifndef VERSION_tf_random
 #define VERSION_tf_random "0.5"
