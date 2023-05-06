@@ -5,6 +5,7 @@ import Graphics.Gloss.Interface.Environment
 import Graphics.Gloss.Interface.Pure.Game
 import Control.Monad.Random
 import Control.Monad.Trans.State 
+import Graphics.Gloss.Juicy
 import HexagonFile
 import DVDFile
 import BouncingBall
@@ -33,11 +34,13 @@ eventFunc :: (Monad m) => Event -> AppStateT m ()
 eventFunc (EventResize (w, h)) = do
     s <- lift get
     lift . put $ s {screenSize = (w, h)}
-eventFunc (EventKey (Char '1') Down _ _) = lift $ modify (\s -> s {screensaver = Just DVDlogo})
-eventFunc (EventKey (Char '2') Down _ _) = lift $ modify (\s -> s {screensaver = Just BouncingBalls})
-eventFunc (EventKey (Char '3') Down _ _) = lift $ modify (\s -> s {screensaver = Just HexagonalTiles})
+eventFunc (EventKey (Char '1') Down _ _) = modifyState DVDlogo
+eventFunc (EventKey (Char '2') Down _ _) = modifyState BouncingBalls
+eventFunc (EventKey (Char '3') Down _ _) = modifyState HexagonalTiles
 eventFunc _ = return ()
 
+modifyState :: (Monad m) => Screensaver -> AppStateT m ()
+modifyState chosenScreen = lift $ modify (\s -> s {screensaver = Just chosenScreen})
 
 updateScreensaver :: (Monad m) => Float -> AppStateT m ()
 updateScreensaver seconds = do 
@@ -66,8 +69,12 @@ renderScreensaver = do
 main :: IO ()
 main = do
     (width, height) <- getScreenSize
+    images <- mapM loadJuicyPNG dvdColors
+    let images' = case sequence images of
+                    Just imgs -> imgs
+                    Nothing   -> [color white (text "ERROR")]
     let window = InWindow "Screensaver" (width, height) (offset, offset)
-    let initialState = AppState (Nothing) initialLogoState initialHexState initialBallState (width, height)
+    let initialState = AppState (Nothing) (initialLogoState images') initialHexState initialBallState (width, height)
     gen <- newStdGen
     play window background fps (initialState, gen)
       (\(state',_) -> evalState (evalRandT renderScreensaver gen) state')

@@ -39,7 +39,6 @@ updateHexState elapsedTime hexState =
     newColorTime = 0.8
 
 
-
 hexagon :: Float -> Picture
 hexagon sideLength = polygon vertices
   where
