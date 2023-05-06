@@ -1,7 +1,5 @@
 module BouncingBall where 
 import Graphics.Gloss
-import Graphics.Gloss.Data.Color
-import Debug.Trace
 
 data BallState = Ball {
   ballPos :: (Float, Float),
@@ -19,11 +17,11 @@ updateBalls (screenW, screenH) seconds randomnum balls = balls {ballPos = (x', y
   where 
     (x, y) =  ballPos balls
     (vx, vy) = ballVel balls
-    (x', vx') = clip x vx (((fromIntegral screenW)/2)-(ballRadius balls))
-    (y', vy') = clip y vy (((fromIntegral screenH)/2)-(ballRadius balls))
-    clip h dh max
-          | h' > max = (max, -dh*randomnum)
-          | h' < -max= (-max, -dh*randomnum)
+    (x', vx') = caseOfOutsideBounds x vx (((fromIntegral screenW)/2)-(ballRadius balls))
+    (y', vy') = caseOfOutsideBounds y vy (((fromIntegral screenH)/2)-(ballRadius balls))
+    caseOfOutsideBounds h dh max'
+          | h' > max' = (max', -dh*randomnum)
+          | h' < -max'= (-max', -dh*randomnum)
           | otherwise = (h', dh)
           where h' = h + seconds*dh 
 

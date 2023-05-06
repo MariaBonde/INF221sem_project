@@ -4,6 +4,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.Environment
 import Graphics.Gloss.Interface.Pure.Game
 import Control.Monad.Random
+import Control.Monad.Reader
 import Control.Monad.Trans.State 
 import Graphics.Gloss.Juicy
 import HexagonFile
@@ -46,7 +47,7 @@ updateScreensaver :: (Monad m) => Float -> AppStateT m ()
 updateScreensaver seconds = do 
   appState <- lift get 
   case screensaver appState of 
-    Just DVDlogo -> lift . put $ appState {dvdLogoState = updateDVD (screenSize appState) seconds (dvdLogoState appState)}
+    Just DVDlogo -> lift . put $ appState { dvdLogoState = execState (updateDVD (screenSize appState) seconds) (dvdLogoState appState) }
     Just BouncingBalls -> do
       randomnum <- getRandomR (0.7, 1.2)
       lift . put $ appState {bouncingBallState = updateBalls (screenSize appState) seconds randomnum (bouncingBallState appState)}  
@@ -61,7 +62,7 @@ renderScreensaver :: (Monad m) => AppStateT m Picture
 renderScreensaver = do
   appState <- lift get 
   case screensaver appState of 
-    Just DVDlogo -> return $ renderDVD (dvdLogoState appState)
+    Just DVDlogo -> return $ runReader renderDVD (dvdLogoState appState)
     Just BouncingBalls -> return $ renderBalls (bouncingBallState appState)
     Just HexagonalTiles -> return $ hexagonGrid (screenSize appState) (hexagonalState appState)
     Nothing -> return $ renderNothing (screenSize appState) (Nothing :: Maybe Screensaver)
