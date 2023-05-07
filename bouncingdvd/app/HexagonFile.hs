@@ -2,6 +2,7 @@ module HexagonFile where
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.Color
+import Control.Monad.Reader
 
 data HexagonalState = Hexagon
   { currentColors :: [Color],
@@ -51,15 +52,15 @@ darkerColor color 0 = color
 darkerColor color n = darkerColor (dim color) (n - 1)
 
 
-hexagonGrid :: (Int, Int) -> HexagonalState -> Picture
-hexagonGrid (width, height) hex = pictures
+hexagonGrid :: (Int, Int) -> Reader HexagonalState Picture
+hexagonGrid (width, height) = do
+  colors <- asks currentColors
+  return $ pictures
     [ translate (xOffset + x * horizontalSpacing)  ( yOffset + y * verticalSpacing ) $
-      color (if even $ round (x + y) then color1 else color2) $
+      color (if even $ round (x + y) then colors !! 0 else colors !! 1) $
       hexagon sideLength
     | x <- [0..cols - 1], y <- [0..rows - 1] ]
   where
-    color1 = currentColors hex !! 0
-    color2 = currentColors hex !! 1
     rows = fromIntegral height / sideLength
     cols = fromIntegral width / sideLength
     sideLength = 50

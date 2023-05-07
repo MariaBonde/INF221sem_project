@@ -1,5 +1,6 @@
 module BouncingBall where 
 import Graphics.Gloss
+import Control.Monad.Reader
 
 data BallState = Ball {
   ballPos :: (Float, Float),
@@ -7,10 +8,11 @@ data BallState = Ball {
   ballRadius :: Float
 }
 
-renderBalls :: BallState -> Picture
-renderBalls balls = translate x y $ color cyan $ circleSolid (ballRadius balls)
-  where 
-    (x, y) = ballPos balls
+renderBalls :: Reader BallState Picture
+renderBalls = do 
+  radius <- asks ballRadius
+  (x, y) <- asks ballPos
+  return $ translate x y $ color cyan $ circleSolid radius
 
 updateBalls :: (Int, Int) -> Float -> Float -> BallState -> BallState
 updateBalls (screenW, screenH) seconds randomnum balls = balls {ballPos = (x', y'), ballVel = (vx', vy')}

@@ -22,11 +22,11 @@ updateDVD s seconds = changeDir s >> moveLogo seconds
 
 moveLogo :: Float -> State LogoState ()
 moveLogo seconds = do
-    (x, y) <- gets logoPos
-    (vx, vy) <- gets logoVel
-    let x' = x + vx * seconds
-    let y' = y + vy * seconds
-    modify (\logo -> logo { logoPos = (x', y') })
+  (x, y) <- gets logoPos
+  (vx, vy) <- gets logoVel
+  let x' = x + vx * seconds
+  let y' = y + vy * seconds
+  modify (\logo -> logo { logoPos = (x', y') })
 
 changeDir :: (Int, Int) -> State LogoState ()
 changeDir s = do 
@@ -47,7 +47,7 @@ changeDir s = do
         -vy
         else 
           vy 
-  when (vx' /= vx || vy' /= vy) nextColor 
+  when (vx' /= vx || vy' /= vy) nextColor -- if the velocity has changed, change the color
   modify (\logo -> logo { logoVel = (vx', vy') })
 
 withinBounds :: Float -> Int -> Float -> Bool
