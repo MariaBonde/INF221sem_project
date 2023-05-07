@@ -1,4 +1,4 @@
-module DVDFile where
+module DVDFile (dvdColors, LogoState, initialLogoState, updateDVD, renderDVD) where
 
 import Control.Monad.Reader
 import Control.Monad.State
@@ -21,8 +21,14 @@ data LogoState = Logo
 initialLogoState :: [Picture] -> LogoState
 initialLogoState pics = Logo {logoPos = (0, 0), logoVel = (100, 100), logoWidth = 185.0, logoHeight = 82.0, fileNum = 0, logoPictures = pics, currentPicture = head pics}
 
+renderDVD :: Reader LogoState Picture
+renderDVD = do
+  currentPic <- asks currentPicture
+  (x, y) <- asks logoPos
+  return $ translate x y currentPic
+
 updateDVD :: (Int, Int) -> Float -> State LogoState ()
-updateDVD s seconds = changeDir s >> moveLogo seconds
+updateDVD s seconds = changeDir s >> moveLogo seconds --sequence the two functions without dependency on the result of the previous operation
 
 moveLogo :: Float -> State LogoState ()
 moveLogo seconds = do
@@ -65,8 +71,3 @@ nextColor = do
   let num' = if num < length images - 1 then num + 1 else 0
   modify (\logo -> logo {fileNum = num', currentPicture = images !! num'})
 
-renderDVD :: Reader LogoState Picture
-renderDVD = do
-  currentPic <- asks currentPicture
-  (x, y) <- asks logoPos
-  return $ translate x y currentPic

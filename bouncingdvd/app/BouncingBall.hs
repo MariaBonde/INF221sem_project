@@ -1,5 +1,4 @@
-module BouncingBall where
-
+module BouncingBall (BallState, initialBallState, renderBalls, updateBalls) where
 import Control.Monad.Reader
 import Graphics.Gloss
 
@@ -8,6 +7,10 @@ data BallState = Ball
     ballVel :: (Float, Float),
     ballRadius :: Float
   }
+
+initialBallState :: BallState
+initialBallState =
+  Ball {ballPos = (500, -300), ballVel = (100, 220), ballRadius = 50}
 
 renderBalls :: Reader BallState Picture
 renderBalls = do
@@ -33,6 +36,3 @@ updateBalls (screenW, screenH) seconds randomnum balls =
       where
         h' = h + seconds * dh
 
-initialBallState :: BallState
-initialBallState =
-  Ball {ballPos = (500, -300), ballVel = (100, 220), ballRadius = 50}

@@ -73,14 +73,9 @@ executable bouncingdvd
     build-depends:    base ^>=4.17.0.0
                     , gloss
                     , gloss-juicy
-                    , JuicyPixels
-                    , bytestring
                     , mtl
                     , MonadRandom
-                    , tf-random
                     , transformers
-                    , strict
-                    , monad-loops
                  
             
 

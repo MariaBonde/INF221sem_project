@@ -1,4 +1,4 @@
-module HexagonFile where
+module HexagonFile (updateHexState, hexagonGrid, HexagonalState, initialHexState) where
 
 import Control.Monad.Reader
 import Graphics.Gloss
@@ -10,6 +10,9 @@ data HexagonalState = Hexagon
     timer :: Float
   }
 
+initialHexState :: HexagonalState
+initialHexState = Hexagon {currentColors = [rose, violet], currentIndex = 1, timer = 0}
+
 colors :: [Color]
 colors = [violet, aquamarine, chartreuse, orange, dim red, rose, magenta, violet, azure]
 
@@ -17,6 +20,7 @@ makeColors :: [Color] -> [Color]
 makeColors [] = []
 makeColors [x] = darkerColor (addColors x azure) 3 : makeColors []
 makeColors (x : y : xs) = darkerColor x 2 : addColors x y : darkerColor y 3 : makeColors (y : xs)
+
 
 updateHexState :: Float -> HexagonalState -> HexagonalState
 updateHexState elapsedTime hexState =
@@ -44,6 +48,7 @@ darkerColor :: Color -> Int -> Color
 darkerColor color 0 = color
 darkerColor color n = darkerColor (dim color) (n - 1)
 
+
 hexagonGrid :: (Int, Int) -> Reader HexagonalState Picture
 hexagonGrid (width, height) = do
   currentcolors <- asks currentColors
@@ -64,5 +69,3 @@ hexagonGrid (width, height) = do
     verticalSpacing = sqrt 3 * sideLength
     horizontalSpacing = 2 * sideLength
 
-initialHexState :: HexagonalState
-initialHexState = Hexagon {currentColors = [rose, violet], currentIndex = 1, timer = 0}

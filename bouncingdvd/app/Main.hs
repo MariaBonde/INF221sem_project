@@ -5,10 +5,10 @@ import Control.Monad.Random
 import Control.Monad.Reader
 import Control.Monad.Trans.State
 import DVDFile
-import Graphics.Gloss
-import Graphics.Gloss.Interface.Environment
-import Graphics.Gloss.Interface.Pure.Game
-import Graphics.Gloss.Juicy
+import Graphics.Gloss 
+import Graphics.Gloss.Interface.Environment(getScreenSize)
+import Graphics.Gloss.Interface.Pure.Game 
+import Graphics.Gloss.Juicy (loadJuicyPNG)
 import HexagonFile
 
 type AppStateT m = RandT StdGen (StateT AppState m)
@@ -70,7 +70,7 @@ renderScreensaver = do
 
 main :: IO ()
 main = do
-  (width, height) <- getScreenSize
+  (width, height) <- getScreenSize 
   images <- mapM loadJuicyPNG dvdColors -- load all images, using mapM because have monadic values applied to the Picture type
   let images' = case sequence images of
         Just imgs -> imgs
